@@ -15,12 +15,18 @@ on:
 
 env:
   IMAGE_NAME: rdumont/elasticsearch-exporter
+  GOPATH: ${{ github.workspace }}
+  GO111MODULE: off
 
 jobs:
   # Run tests.
   # See also https://docs.docker.com/docker-hub/builds/automated-testing/
   test:
     runs-on: ubuntu-latest
+  
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/github.com/justwatchcom/elasticsearch_exporter
 
     steps:
       - name: Set up Go 1.x
@@ -29,6 +35,11 @@ jobs:
           go-version: ^1.14
 
       - uses: actions/checkout@v2
+        with:
+          path: ${{ env.GOPATH }}/src/github.com/justwatchcom/elasticsearch_exporter
+      
+      - name: Set up build dependencies
+        run: go get -u github.com/prometheus/promu
       
       - name: Build
         run: make build
@@ -44,14 +55,23 @@ jobs:
 
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
+  
+    defaults:
+      run:
+        working-directory: ${{ env.GOPATH }}/src/github.com/justwatchcom/elasticsearch_exporter
 
     steps:
       - uses: actions/checkout@v2
+        with:
+          path: ${{ env.GOPATH }}/src/github.com/justwatchcom/elasticsearch_exporter
         
       - name: Set up Go 1.x
         uses: actions/setup-go@v2
         with:
-          go-version: ^1.13
+          go-version: ^1.14
+      
+      - name: Set up build dependencies
+        run: go get -u github.com/prometheus/promu
 
       - name: Build binary
         run: make build
